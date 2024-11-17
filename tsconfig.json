@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",        // Usa ESNext para compilar a módulos
+    "target": "ES6",           // Usa ES6 para generar código compatible con la mayoría de los navegadores modernos
+    "outDir": "./dist",        // Carpeta de salida para el código compilado
+    "esModuleInterop": true,   // Asegúrate de que la interoperabilidad de módulos esté habilitada
+    "moduleResolution": "node",// Resolución de módulos al estilo Node.js
+    "strict": true             // Habilita la verificación estricta para evitar errores
+  },
+  "include": ["src/**/*"]      // Asegúrate de incluir todos los archivos fuente de TypeScript
+}
