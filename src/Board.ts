@@ -8,8 +8,8 @@ export class Board {
     readonly cols: number = 10;
 
     constructor(colors: string[]) {
-        this.colors = colors;
-        this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
+      this.colors = colors;
+      this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
     }
 
     draw(ctx: CanvasRenderingContext2D) {
@@ -27,6 +27,10 @@ export class Board {
                 }
             }
         }
+    }
+
+    clear() {
+        this.grid = Array.from({ length: this.rows }, () => Array(this.cols).fill(0));
     }
 
     placePiece(piece: Piece) {

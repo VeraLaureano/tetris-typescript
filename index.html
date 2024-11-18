@@ -8,6 +8,22 @@
 </head>
 <body>
     <canvas id="tetris" width="300" height="600"></canvas>
+    <main>
+
+      <section class="startSection" id="start-section">
+        <h1>Tetris Game</h1>
+        <button id="start-btn">Start Game</button>
+      </section>
+
+      <section id="game-over-modal" class="modal">
+        <div class="modal-content">
+        <h2>Game Over</h2>
+        <p id="score">Tu puntaje: 0</p>
+        <button id="restart-btn">Reiniciar</button>
+        </div>
+      </section>
+    </main>
+
     <script type="module" src="dist/index.js"></script>
 </body>
 </html>

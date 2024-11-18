@@ -9,73 +9,96 @@ export class Game {
     private controls: Controls;
     private ctx: CanvasRenderingContext2D;
     private gameInterval: number | null = null;
+    private score: number;
+
+    private modal: HTMLElement;
+    private scoreElement: HTMLElement;
+    private restartButton: HTMLElement;
 
     private static colors: string[] = ["#4B0082", "#2E8B57", "#8B4513","#A52A2A", "#556B2F", "#6A5ACD", "#B22222"];
 
     constructor(ctx: CanvasRenderingContext2D) {
-        this.board = new Board(Game.colors);
-        this.currentPiece = this.generateRandomPiece();
-        this.controls = new Controls();
-        this.ctx = ctx;
+      this.board = new Board(Game.colors);
+      this.currentPiece = this.generateRandomPiece();
+      this.controls = new Controls();
+      this.ctx = ctx;
+      this.score = 0;
 
-        // Asignamos las acciones a los controles
-        this.controls.onMoveLeft = () => this.movePiece('left');
-        this.controls.onMoveRight = () => this.movePiece('right');
-        this.controls.onMoveDown = () => this.movePiece('down');
-        this.controls.onRotate = () => this.rotatePiece();
+      // Asignamos las acciones a los controles
+      this.controls.onMoveLeft = () => this.movePiece('left');
+      this.controls.onMoveRight = () => this.movePiece('right');
+      this.controls.onMoveDown = () => this.movePiece('down');
+      this.controls.onRotate = () => this.rotatePiece();
+    
+      // Referencia al modal y al botón de reinicio
+      this.modal = document.getElementById('game-over-modal') as HTMLElement;
+      this.scoreElement = document.getElementById('score') as HTMLElement;
+      this.restartButton = document.getElementById('restart-btn') as HTMLButtonElement;
+    
+      this.restartButton.addEventListener('click', () => this.restart());
     }
 
     start() {
-        if (this.gameInterval) return; // Si ya está corriendo el juego, no lo iniciamos de nuevo
-        this.gameInterval = setInterval(() => {
-            this.update();
-            this.render();
-        }, 500);
+      if (this.gameInterval) return; // Si ya está corriendo el juego, no lo iniciamos de nuevo
+      this.gameInterval = setInterval(() => {
+        this.update();
+        this.render();
+      }, 500);
     }
 
     gameOver() {
-      if (this.gameInterval)
+      if (this.gameInterval) {
         clearInterval(this.gameInterval);
+        this.gameInterval = null;
+      }
 
-      this.gameInterval = null;
-      alert("Game over!")
+      this.scoreElement.textContent = `Tu puntaje: ${this.score}`;
+      this.modal.style.display = 'flex';
     }
 
-    reset() {}
+    restart() {
+      this.board.clear();
+      this.score = 0;
+      this.currentPiece = this.generateRandomPiece();
+      this.modal.style.display = 'none';
+      this.start()
+    }
 
     update() {
-        this.currentPiece.moveDown();
-        if (this.board.checkCollision(this.currentPiece)) {
-            this.currentPiece.setRow(this.currentPiece.getRow()-1); // Volver a la posición anterior
-            this.board.placePiece(this.currentPiece);
-            this.board.clearFullRows();
+      this.currentPiece.moveDown();
+      if (this.board.checkCollision(this.currentPiece)) {
+        this.currentPiece.setRow(this.currentPiece.getRow()-1); // Volver a la posición anterior
+        this.board.placePiece(this.currentPiece);
+        this.board.clearFullRows();
 
-            this.currentPiece = this.generateRandomPiece();
+        this.currentPiece = this.generateRandomPiece();
             
-            if (this.board.checkCollision(this.currentPiece))
-              return this.gameOver();
-        }
+        if (this.board.checkCollision(this.currentPiece))
+          return this.gameOver();
+
+        this.score++;
+      }
     }
 
     render() {
-        this.board.draw(this.ctx);
-        this.drawCurrentPiece();
+      this.board.draw(this.ctx);
+      this.drawCurrentPiece();
     }
 
     drawCurrentPiece() {
-        const coords = this.currentPiece.getCoords();
-        coords.forEach(coord => {
-            this.ctx.fillStyle = this.currentPiece.getColor();
-            this.ctx.fillRect(coord.col * 30, coord.row * 30, 30, 30);
-            this.ctx.strokeStyle = 'black';
-            this.ctx.strokeRect(coord.col * 30, coord.row * 30, 30, 30);
-        });
+      const coords = this.currentPiece.getCoords();
+      coords.forEach(coord => {
+        this.ctx.fillStyle = this.currentPiece.getColor();
+        this.ctx.fillRect(coord.col * 30, coord.row * 30, 30, 30);
+        this.ctx.strokeStyle = 'black';
+        this.ctx.strokeRect(coord.col * 30, coord.row * 30, 30, 30);
+      });
     }
 
     movePiece(direction: 'left' | 'right' | 'down') {
       const prevPiece = new Piece(
-          this.currentPiece.getShape(), // Crea una copia de la forma de la pieza
-          this.currentPiece.getColor()        // Copia el color de la pieza
+        this.currentPiece.getShape(), // Crea una copia de la forma de la pieza
+        this.currentPiece.getColor()        // Copia el color de la pieza
       );
       prevPiece.setCol(this.currentPiece.getRow());
       prevPiece.setCol(this.currentPiece.getCol());
@@ -92,32 +115,32 @@ export class Game {
     }
 
     rotatePiece() {
+      this.currentPiece.rotate();
+      if (this.board.checkCollision(this.currentPiece)) {
+        this.currentPiece.rotate(); // Deshacer la rotación si hay colisión
         this.currentPiece.rotate();
-        if (this.board.checkCollision(this.currentPiece)) {
-            this.currentPiece.rotate(); // Deshacer la rotación si hay colisión
-            this.currentPiece.rotate();
-            this.currentPiece.rotate();
-        }
+        this.currentPiece.rotate();
+      }
     }
 
     private generateRandomPiece() {
-        const shapes = [
-            [[1, 1, 1, 1]], // I
-            [[1, 1], [1, 1]], // O
-            [[0, 1, 0], [1, 1, 1]], // T
-            [[1, 0, 0], [1, 1, 1]], // L
-            [[0, 0, 1], [1, 1, 1]], // J
-            [[0, 1, 1], [1, 1, 0]], // S
-            [[1, 1, 0], [0, 1, 1]] // Z
-        ];
+      const shapes = [
+        [[1, 1, 1, 1]], // I
+        [[1, 1], [1, 1]], // O
+        [[0, 1, 0], [1, 1, 1]], // T
+        [[1, 0, 0], [1, 1, 1]], // L
+        [[0, 0, 1], [1, 1, 1]], // J
+        [[0, 1, 1], [1, 1, 0]], // S
+        [[1, 1, 0], [0, 1, 1]] // Z
+      ];
 
-        const colorIndex: number = Math.floor(Math.random() * Game.colors.length)
-        const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+      const colorIndex: number = Math.floor(Math.random() * Game.colors.length)
+      const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
 
-        const coloredShape = randomShape.map(row => 
-            row.map(cell => cell === 1 ? colorIndex + 1 : 0) 
-        );    
+      const coloredShape = randomShape.map(row => 
+        row.map(cell => cell === 1 ? colorIndex + 1 : 0) 
+      );    
 
-        return new Piece(coloredShape, Game.colors[colorIndex]);
+      return new Piece(coloredShape, Game.colors[colorIndex]);
     }
 }
